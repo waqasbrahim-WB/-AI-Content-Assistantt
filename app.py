@@ -2,29 +2,19 @@ import streamlit as st
 import google.generativeai as genai
 import os
 
-# Configure Gemini API (make sure to set your API key in environment variables or Streamlit secrets)
 API_KEY = os.getenv("GEMINI_API_KEY")
 if not API_KEY:
     st.error("❌ Gemini API key not found. Please set GEMINI_API_KEY in environment variables or Streamlit secrets.")
 else:
     genai.configure(api_key=API_KEY)
 
-# Try loading model with fallback
-def load_model():
-    try:
-        return genai.GenerativeModel("gemini-1.5-flash")
-    except Exception:
-        return genai.GenerativeModel("gemini-1.5-pro")
+# Use supported Gemini model
+model = genai.GenerativeModel("gemini-1.5-pro")
 
-model = load_model()
-
-# Streamlit UI
 st.set_page_config(page_title="AI Content Assistant", page_icon="✨", layout="centered")
 st.title("✨ AI Content Assistant")
-
 st.write("Generate complete posts with captions and hashtags using Gemini AI.")
 
-# User inputs
 content_type = st.selectbox("Select Content Type", ["Post", "Article", "Tweet", "LinkedIn Update"])
 platform = st.selectbox("Select Platform", ["Instagram", "Twitter", "LinkedIn", "Facebook"])
 topic = st.text_input("Enter Topic", "AI in Education")
@@ -53,7 +43,6 @@ if st.button("Generate Content"):
             st.subheader("Generated Content")
             st.write(output)
 
-            # Download option
             st.download_button(
                 label="📥 Download Content",
                 data=output,
@@ -62,4 +51,3 @@ if st.button("Generate Content"):
             )
         except Exception as e:
             st.error(f"❌ Error generating content: {str(e)}")
-            st.info("Tip: Check if your GEMINI_API_KEY is valid and model name is correct.")
