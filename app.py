@@ -2,12 +2,21 @@ import streamlit as st
 import google.generativeai as genai
 import os
 
-# Configure Gemini API (make sure to set your API key in environment variables)
+# Configure Gemini API (make sure to set your API key in environment variables or Streamlit secrets)
 API_KEY = os.getenv("GEMINI_API_KEY")
-genai.configure(api_key=API_KEY)
+if not API_KEY:
+    st.error("❌ Gemini API key not found. Please set GEMINI_API_KEY in environment variables or Streamlit secrets.")
+else:
+    genai.configure(api_key=API_KEY)
 
-# Load Gemini model
-model = genai.GenerativeModel("gemini-1.5-flash")
+# Try loading model with fallback
+def load_model():
+    try:
+        return genai.GenerativeModel("gemini-1.5-flash")
+    except Exception:
+        return genai.GenerativeModel("gemini-1.5-pro")
+
+model = load_model()
 
 # Streamlit UI
 st.set_page_config(page_title="AI Content Assistant", page_icon="✨", layout="centered")
@@ -37,16 +46,20 @@ if st.button("Generate Content"):
         3. 5-7 relevant hashtags
         """
 
-        response = model.generate_content(prompt)
-        output = response.text
+        try:
+            response = model.generate_content(prompt)
+            output = response.text
 
-        st.subheader("Generated Content")
-        st.write(output)
+            st.subheader("Generated Content")
+            st.write(output)
 
-        # Download option
-        st.download_button(
-            label="📥 Download Content",
-            data=output,
-            file_name="generated_content.txt",
-            mime="text/plain"
-        )
+            # Download option
+            st.download_button(
+                label="📥 Download Content",
+                data=output,
+                file_name="generated_content.txt",
+                mime="text/plain"
+            )
+        except Exception as e:
+            st.error(f"❌ Error generating content: {str(e)}")
+            st.info("Tip: Check if your GEMINI_API_KEY is valid and model name is correct.")
